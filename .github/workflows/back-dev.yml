@@ -34,7 +34,11 @@ jobs:
       # Slack 빌드 시작 알림
       - name: Send Slack start message
         run: |
-          COMMIT_TIMESTAMP=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
+          BRANCH="${{ github.event.client_payload.branchName }}"
+          SHORT_COMMIT="${GITHUB_SHA::7}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/new-project:${{ github.sha }}"
+          COMMIT_TIMESTAMP="${{ github.event.head_commit.timestamp || 'N/A' }}"
           BUILD_START_TIMESTAMP=$(date +%s)
           PAYLOAD=$(cat <<EOF
           {
@@ -49,7 +53,7 @@ jobs:
                   { "title": "커밋해시", "value": "<$RUN_URL|$SHORT_COMMIT>", "short": true },
                   { "title": "Triggered by", "value": "${{ github.actor }}", "short": true },
                   { "title": "이미지 태그", "value": "$IMAGE", "short": false },
-                  { "title": "푸시된 시간", "value": "<!date^${COMMIT_TIMESTAMP}^{date_short_pretty} {time_secs}|${{ github.event.head_commit.timestamp }}>", "short": false },
+                  { "title": "푸시된 시간", "value": "$COMMIT_TIMESTAMP", "short": false },
                   { "title": "빌드 시작 시간", "value": "<!date^${BUILD_START_TIMESTAMP}^{date_short_pretty} {time_secs}|시작됨>", "short": false }
                 ],
                 "footer": "Workflow",
