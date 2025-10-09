@@ -2,7 +2,8 @@ name: Backend Dev env CI/CD
 
 on:
   repository_dispatch:
-    types: [backend-dev]
+    #types: [backend-dev]
+    types: [test]
 
 env: 
   repoName: ${{ github.event.client_payload.repoName }}
