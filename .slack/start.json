@@ -1,0 +1,20 @@
+{
+  "attachments": [
+    {
+      "color": "#36a64f",
+      "pretext": ":rocket: 백엔드 Dev stage 빌드 시작",
+      "fields": [
+        { "title": "레포", "value": "${REPO}", "short": true },
+        { "title": "브랜치", "value": "${BRANCH}", "short": true },
+        { "title": "담당자", "value": "<@U07PZVCA3LN>, <@U07QK8UB2HX>, <@U07QVC2UW48>" },
+        { "title": "커밋해시", "value": "<${RUN_URL}|${SHORT_COMMIT}>", "short": true },
+        { "title": "Triggered by", "value": "${ACTOR}", "short": true },
+        { "title": "이미지 태그", "value": "${IMAGE}", "short": false },
+        { "title": "푸시된 시간", "value": "${COMMIT_DATE}", "short": false },
+        { "title": "빌드 시작 시간", "value": "${BUILD_START_DATE}", "short": false }
+      ],
+      "footer": "Workflow",
+      "ts": ${TS}
+    }
+  ]
+}

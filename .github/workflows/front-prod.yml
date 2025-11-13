@@ -1,0 +1,50 @@
+name: FE Develop Deploy
+
+on:
+  repository_dispatch:
+    types: [fe-develop-deploy]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to FE Server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.ONPREM_HOST }}
+          username: ${{ secrets.ONPREM_USER }}
+          password: ${{ secrets.ONPREM_SSH_PASSWORD }}
+          port: ${{ secrets.ONPREM_SSH_PORT }}
+          script: |
+            cd ${{ secrets.FRONTEND_WORK_DIR }}
+            git fetch origin
+            git reset --hard origin/develop
+
+            docker compose down
+            docker compose up -d --build
+            docker image prune -f
+
+      - name: Slack Success
+        if: success()
+        run: |
+          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          export SHORT_COMMIT="${GITHUB_SHA::7}"
+          export ACTOR="${{ github.actor }}"
+          export TS=$(date -u +%s)
+
+          envsubst < .slack/success.json > payload.json
+          curl -X POST -H 'Content-type: application/json' \
+              --data @payload.json ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Slack Failure
+        if: failure()
+        run: |
+          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          export SHORT_COMMIT="${GITHUB_SHA::7}"
+          export ACTOR="${{ github.actor }}"
+          export TS=$(date -u +%s)
+
+          envsubst < .slack/failure.json > payload.json
+          curl -X POST -H 'Content-type: application/json' \
+              --data @payload.json ${{ secrets.SLACK_WEBHOOK_URL }}

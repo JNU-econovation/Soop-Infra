@@ -1,0 +1,25 @@
+{
+  "attachments": [
+    {
+      "color": "#36a64f",
+      "title": ":white_check_mark: 배포 성공",
+      "fields": [
+        { "title": "Repository", "value": "${REPO}", "short": true },
+        { "title": "Branch", "value": "${BRANCH}", "short": true },
+        { "title": "Commit", "value": "<${RUN_URL}|${SHORT_COMMIT}>", "short": true },
+        { "title": "빌드 시작", "value": "${BUILD_START}", "short": true },
+        { "title": "빌드 종료", "value": "${BUILD_END}", "short": true },
+        { "title": "빌드 시간", "value": "${BUILD_DURATION}", "short": true },
+        { "title": "배포 시작", "value": "${DEPLOY_START}", "short": true },
+        { "title": "배포 종료", "value": "${DEPLOY_END}", "short": true },
+        { "title": "배포 시간", "value": "${DEPLOY_DURATION}", "short": true },
+        { "title": "총 소요 시간", "value": "${TOTAL_DURATION}", "short": false },
+        { "title": "Image", "value": "${IMAGE}", "short": false },
+        { "title": "Image digest", "value": "${DIGEST}", "short": false }
+      ],
+      "footer": "View run",
+      "footer_icon": "https://github.githubassets.com/favicon.ico",
+      "ts": ${TS}
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "attachments": [
+    {
+      "color": "#ff0000",
+      "title": ":x: 배포 실패",
+      "fields": [
+        { "title": "Repository", "value": "${REPO}", "short": true },
+        { "title": "Branch", "value": "${BRANCH}", "short": true },
+        { "title": "Commit", "value": "<${RUN_URL}|${SHORT_COMMIT}>", "short": true }
+      ],
+      "footer": "View run for logs",
+      "ts": ${TS}
+    }
+  ]
+}
