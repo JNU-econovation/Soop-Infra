@@ -1,15 +1,48 @@
-name: FE Develop Deploy
+name: Frontend Production Deploy
 
 on:
   repository_dispatch:
-    types: [fe-develop-deploy]
+    types: [fe-deploy]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      REPO: ${{ github.event.client_payload.repo }}
+      BRANCH: ${{ github.event.client_payload.branch }}
+      COMMIT: ${{ github.event.client_payload.commit }}
+      AUTHOR: ${{ github.event.client_payload.author }}
+      PUSHED_AT: ${{ github.event.client_payload.pushed_at }}
+
     steps:
-      - name: Deploy to FE Server
+      ##############################################################
+      # Start Slack Message
+      ##############################################################
+      - name: Send Slack Start Message
+        run: |
+          export SERVICE_NAME="Frontend Prod"
+          export REPO="${REPO}"
+          export BRANCH="${BRANCH}"
+          export SHORT_COMMIT="${COMMIT:0:7}"
+          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          export AUTHOR="${AUTHOR}"
+          export COMMIT_DATE="${PUSHED_AT}"
+          export BUILD_START_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export TS="$(date +%s)"
+
+          envsubst < .slack/start.json > slack-start.json
+
+          curl -s -X POST \
+            -H "Content-type: application/json" \
+            --data @slack-start.json \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      ##############################################################
+      # Deploy to Production FE Server
+      ##############################################################
+      - name: Deploy to FE Production Server
+        id: deploy-step
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.ONPREM_HOST }}
@@ -17,34 +50,53 @@ jobs:
           password: ${{ secrets.ONPREM_SSH_PASSWORD }}
           port: ${{ secrets.ONPREM_SSH_PORT }}
           script: |
-            cd ${{ secrets.FRONTEND_WORK_DIR }}
-            git fetch origin
-            git reset --hard origin/develop
+            cd ${{ secrets.FRONTEND_PROD_WORKING_DIR }}
 
+            git fetch origin
+            git reset --hard origin/${BRANCH}
             docker compose down
             docker compose up -d --build
             docker image prune -f
 
-      - name: Slack Success
+      ##############################################################
+      # Success Slack Message
+      ##############################################################
+      - name: Send Slack Success Message
         if: success()
         run: |
+          export SERVICE_NAME="Frontend Prod"
+          export REPO="${REPO}"
+          export BRANCH="${BRANCH}"
+          export SHORT_COMMIT="${COMMIT:0:7}"
           export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          export SHORT_COMMIT="${GITHUB_SHA::7}"
-          export ACTOR="${{ github.actor }}"
-          export TS=$(date -u +%s)
+          export AUTHOR="${AUTHOR}"
+          export PUSHED_AT="${PUSHED_AT}"
+          export TS="$(date +%s)"
 
-          envsubst < .slack/success.json > payload.json
-          curl -X POST -H 'Content-type: application/json' \
-              --data @payload.json ${{ secrets.SLACK_WEBHOOK_URL }}
+          envsubst < .slack/success.json > slack-success.json
 
-      - name: Slack Failure
+          curl -s -X POST \
+            -H "Content-type: application/json" \
+            --data @slack-success.json \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      ##############################################################
+      # Failure Slack Message
+      ##############################################################
+      - name: Send Slack Failure Message
         if: failure()
         run: |
+          export SERVICE_NAME="Frontend Prod"
+          export REPO="${REPO}"
+          export BRANCH="${BRANCH}"
+          export SHORT_COMMIT="${COMMIT:0:7}"
           export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          export SHORT_COMMIT="${GITHUB_SHA::7}"
-          export ACTOR="${{ github.actor }}"
-          export TS=$(date -u +%s)
+          export AUTHOR="${AUTHOR}"
+          export TS="$(date +%s)"
 
-          envsubst < .slack/failure.json > payload.json
-          curl -X POST -H 'Content-type: application/json' \
-              --data @payload.json ${{ secrets.SLACK_WEBHOOK_URL }}
+          envsubst < .slack/failure.json > slack-failure.json
+
+          curl -s -X POST \
+            -H "Content-type: application/json" \
+            --data @slack-failure.json \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
