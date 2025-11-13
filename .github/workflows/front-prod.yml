@@ -17,21 +17,22 @@ jobs:
 
     steps:
       ##############################################################
+      # Prepare Common Environment Variables
+      ##############################################################
+      - name: Prepare Slack ENV
+        run: |
+          echo "SERVICE_NAME=Frontend Prod" >> $GITHUB_ENV
+          echo "SHORT_COMMIT=${COMMIT:0:7}" >> $GITHUB_ENV
+          echo "RUN_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_ENV
+          echo "BUILD_START_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+          echo "TS=$(date +%s)" >> $GITHUB_ENV
+
+      ##############################################################
       # Start Slack Message
       ##############################################################
       - name: Send Slack Start Message
         run: |
-          export SERVICE_NAME="Frontend Prod"
-          export REPO="${REPO}"
-          export BRANCH="${BRANCH}"
-          export SHORT_COMMIT="${COMMIT:0:7}"
-          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          export AUTHOR="${AUTHOR}"
-          export COMMIT_DATE="${PUSHED_AT}"
-          export BUILD_START_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          export TS="$(date +%s)"
-
-          envsubst < .slack/start.json > slack-start.json
+          envsubst < "${GITHUB_WORKSPACE}/.slack/start.json" > slack-start.json
 
           curl -s -X POST \
             -H "Content-type: application/json" \
@@ -54,8 +55,10 @@ jobs:
 
             git fetch origin
             git reset --hard origin/${BRANCH}
+
             docker compose down
             docker compose up -d --build
+
             docker image prune -f
 
       ##############################################################
@@ -64,16 +67,9 @@ jobs:
       - name: Send Slack Success Message
         if: success()
         run: |
-          export SERVICE_NAME="Frontend Prod"
-          export REPO="${REPO}"
-          export BRANCH="${BRANCH}"
-          export SHORT_COMMIT="${COMMIT:0:7}"
-          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          export AUTHOR="${AUTHOR}"
-          export PUSHED_AT="${PUSHED_AT}"
-          export TS="$(date +%s)"
+          echo "TS=$(date +%s)" >> $GITHUB_ENV
 
-          envsubst < .slack/success.json > slack-success.json
+          envsubst < "${GITHUB_WORKSPACE}/.slack/success.json" > slack-success.json
 
           curl -s -X POST \
             -H "Content-type: application/json" \
@@ -86,15 +82,9 @@ jobs:
       - name: Send Slack Failure Message
         if: failure()
         run: |
-          export SERVICE_NAME="Frontend Prod"
-          export REPO="${REPO}"
-          export BRANCH="${BRANCH}"
-          export SHORT_COMMIT="${COMMIT:0:7}"
-          export RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          export AUTHOR="${AUTHOR}"
-          export TS="$(date +%s)"
+          echo "TS=$(date +%s)" >> $GITHUB_ENV
 
-          envsubst < .slack/failure.json > slack-failure.json
+          envsubst < "${GITHUB_WORKSPACE}/.slack/failure.json" > slack-failure.json
 
           curl -s -X POST \
             -H "Content-type: application/json" \
