@@ -16,6 +16,8 @@ jobs:
       PUSHED_AT: ${{ github.event.client_payload.pushed_at }}
 
     steps:
+      - name: Checkout Infra Repository
+        uses: actions/checkout@v4
       ##############################################################
       # Prepare Common Environment Variables
       ##############################################################
